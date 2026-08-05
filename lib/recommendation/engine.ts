@@ -21,6 +21,7 @@ import type {
 import type { RecommendationStrategy } from "./strategies/RecommendationStrategy";
 import { createRecommendationStrategy, RECOMMENDATION_CONFIG } from "./config";
 import { RecommendationCache } from "./cache/RecommendationCache";
+import { globalMetrics } from "@/lib/monitoring/RecommendationMetrics";
 
 /**
  * Default recommendation configuration
@@ -137,6 +138,7 @@ export class RecommendationEngine {
    * Generate recommendations for a single user
    * 
    * Phase 5: Now uses caching - returns cached results if valid, regenerates only if expired
+   * Phase 6: Records metrics for cache hits/misses and generation time
    * 
    * @param userId - User ID to generate recommendations for
    * @returns Recommendation result or null if user has no vectors
@@ -156,6 +158,7 @@ export class RecommendationEngine {
     const cached = await this.cache.get(userId);
     if (cached) {
       console.log(`✅ Cache hit for user ${userId}`);
+      globalMetrics.recordCacheHit();
       return {
         userId,
         recommendations: cached,
@@ -172,6 +175,10 @@ export class RecommendationEngine {
     }
 
     console.log(`⚠️ Cache miss for user ${userId}, generating recommendations...`);
+    globalMetrics.recordCacheMiss();
+
+    // Start timing
+    const startTime = Date.now();
 
     // Load user vectors
     const user = await db
@@ -213,7 +220,13 @@ export class RecommendationEngine {
     }
 
     // Compute recommendations
-    return this.computeUserRecommendations(userInput, candidates);
+    const result = await this.computeUserRecommendations(userInput, candidates);
+
+    // Record generation time
+    const generationTime = Date.now() - startTime;
+    globalMetrics.recordGeneration(generationTime);
+
+    return result;
   }
 
   /**

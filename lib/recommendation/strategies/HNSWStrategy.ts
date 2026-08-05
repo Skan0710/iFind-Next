@@ -23,6 +23,7 @@ import type {
 import { HNSWIndexManager } from "@/lib/hnsw/HNSWIndexManager";
 import { HNSW_PATHS, HNSW_CONFIGS, HNSW_PERFORMANCE } from "@/lib/hnsw/config";
 import { computeHybridScore } from "../scoring";
+import { globalMetrics } from "@/lib/monitoring/RecommendationMetrics";
 
 export class HNSWStrategy implements RecommendationStrategy {
   readonly name = "HNSW";
@@ -176,7 +177,10 @@ export class HNSWStrategy implements RecommendationStrategy {
 
     try {
       // Step 1: HNSW approximate search - retrieve Top K nearest neighbors
+      const searchStartTime = Date.now();
       const hnswResults = await this.indexManager.searchKNN(queryVector, retrievalK);
+      const searchLatency = Date.now() - searchStartTime;
+      globalMetrics.recordSearch(searchLatency);
 
       if (hnswResults.length === 0) {
         console.warn("⚠️  HNSW search returned no results");
@@ -217,6 +221,10 @@ export class HNSWStrategy implements RecommendationStrategy {
           id: s.id,
           score: Math.round(s.score * 1000) / 1000, // Round to 3 decimal places
         }));
+
+      // Update index metrics
+      const stats = await this.indexManager.getStats();
+      globalMetrics.updateIndexSize(stats.sizeInBytes ?? 0, stats.vectorCount);
 
       return recommendations;
 
