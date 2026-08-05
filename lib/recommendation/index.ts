@@ -2,9 +2,10 @@
  * Recommendation Service - Public API
  * 
  * This module provides a unified interface for the recommendation system.
- * It exports the core engine, strategies, and utilities needed by API routes.
+ * It exports the core engine, strategies, cache, and utilities needed by API routes.
  * 
  * Phase 2: Added strategy pattern exports
+ * Phase 5: Added caching layer exports
  */
 
 export { RecommendationEngine } from "./engine";
@@ -30,3 +31,8 @@ export {
   createRecommendationStrategy,
   StrategyType,
 } from "./config";
+
+// Cache exports (Phase 5)
+export { RecommendationCache } from "./cache/RecommendationCache";
+export type { CachedRecommendation, CacheConfig, CacheStats } from "./cache/types";
+export { InvalidationReason } from "./cache/types";

@@ -49,6 +49,7 @@ export interface RecommendationResult {
     threshold: number;
     topN: number;
     strategy?: string; // Phase 2: Strategy name (e.g., "BruteForce", "HNSW")
+    cached?: boolean; // Phase 5: Whether result came from cache
   };
 }
 

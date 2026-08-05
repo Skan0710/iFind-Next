@@ -20,6 +20,7 @@ import type {
 } from "./types";
 import type { RecommendationStrategy } from "./strategies/RecommendationStrategy";
 import { createRecommendationStrategy, RECOMMENDATION_CONFIG } from "./config";
+import { RecommendationCache } from "./cache/RecommendationCache";
 
 /**
  * Default recommendation configuration
@@ -34,6 +35,7 @@ const DEFAULT_CONFIG: Required<RecommendationConfig> = {
 export class RecommendationEngine {
   private config: Required<RecommendationConfig>;
   private strategy: RecommendationStrategy;
+  private cache: RecommendationCache;
 
   /**
    * Create a new RecommendationEngine
@@ -50,6 +52,9 @@ export class RecommendationEngine {
       this.config.tfidfWeight,
       this.config.bertWeight
     );
+    
+    // Initialize cache
+    this.cache = new RecommendationCache();
     
     console.log(`RecommendationEngine initialized with strategy: ${this.strategy.name}`);
   }
@@ -131,6 +136,8 @@ export class RecommendationEngine {
   /**
    * Generate recommendations for a single user
    * 
+   * Phase 5: Now uses caching - returns cached results if valid, regenerates only if expired
+   * 
    * @param userId - User ID to generate recommendations for
    * @returns Recommendation result or null if user has no vectors
    */
@@ -144,6 +151,27 @@ export class RecommendationEngine {
     if (!db) {
       throw new Error("Database connection not established");
     }
+
+    // Check cache first
+    const cached = await this.cache.get(userId);
+    if (cached) {
+      console.log(`✅ Cache hit for user ${userId}`);
+      return {
+        userId,
+        recommendations: cached,
+        updatedAt: new Date(),
+        metadata: {
+          totalCandidates: 0,
+          processedCandidates: 0,
+          threshold: this.config.threshold,
+          topN: this.config.topN,
+          strategy: this.strategy.name,
+          cached: true,
+        },
+      };
+    }
+
+    console.log(`⚠️ Cache miss for user ${userId}, generating recommendations...`);
 
     // Load user vectors
     const user = await db
@@ -179,6 +207,7 @@ export class RecommendationEngine {
           processedCandidates: 0,
           threshold: this.config.threshold,
           topN: this.config.topN,
+          strategy: this.strategy.name,
         },
       };
     }
@@ -189,6 +218,8 @@ export class RecommendationEngine {
 
   /**
    * Save recommendations to user document in database
+   * 
+   * Phase 5: Now also caches recommendations
    * 
    * @param result - Recommendation result to save
    */
@@ -201,15 +232,11 @@ export class RecommendationEngine {
       throw new Error("Database connection not established");
     }
 
-    await db.collection("users").updateOne(
-      { _id: new mongoose.Types.ObjectId(result.userId.toString()) },
-      {
-        $set: {
-          recommendedInternships: result.recommendations.map((r) => r.id),
-          recommendedScores: result.recommendations,
-          recommendedUpdatedAt: result.updatedAt,
-        },
-      }
+    // Save to database and cache
+    await this.cache.set(
+      result.userId.toString(),
+      result.recommendations,
+      result.metadata
     );
   }
 
@@ -240,6 +267,13 @@ export class RecommendationEngine {
   async getStoredRecommendations(
     userId: string
   ): Promise<RecommendationCandidate[] | null> {
+    // Try cache first
+    const cached = await this.cache.get(userId);
+    if (cached) {
+      return cached;
+    }
+
+    // Fallback to database
     await connectDB();
     const mongoose = await import("mongoose");
     const db = mongoose.connection.db;
@@ -260,5 +294,12 @@ export class RecommendationEngine {
     }
 
     return user.recommendedScores;
+  }
+
+  /**
+   * Get cache instance for advanced operations
+   */
+  getCache(): RecommendationCache {
+    return this.cache;
   }
 }
