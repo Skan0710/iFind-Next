@@ -2,10 +2,12 @@
  * Recommendation Engine
  * 
  * Core service for generating personalized internship recommendations.
- * This is a refactored version of the brute-force logic from run-recommender.mjs.
+ * Uses pluggable recommendation strategies for flexible algorithm selection.
  * 
- * Current implementation: Brute-force O(U × I) comparison
- * Future: Will be replaced with HNSW vector search
+ * Phase 2: Strategy pattern introduced
+ * - Supports multiple recommendation algorithms via strategy interface
+ * - Current strategy: BruteForceStrategy (original O(U × I) algorithm)
+ * - Future strategy: HNSWStrategy (Phase 3)
  */
 
 import { connectDB } from "@/lib/db";
@@ -16,7 +18,8 @@ import type {
   UserRecommendationInput,
   RecommendationConfig,
 } from "./types";
-import { computeHybridScore } from "./scoring";
+import type { RecommendationStrategy } from "./strategies/RecommendationStrategy";
+import { createRecommendationStrategy, RECOMMENDATION_CONFIG } from "./config";
 
 /**
  * Default recommendation configuration
@@ -30,9 +33,25 @@ const DEFAULT_CONFIG: Required<RecommendationConfig> = {
 
 export class RecommendationEngine {
   private config: Required<RecommendationConfig>;
+  private strategy: RecommendationStrategy;
 
-  constructor(config?: RecommendationConfig) {
+  /**
+   * Create a new RecommendationEngine
+   * 
+   * @param config - Optional configuration overrides
+   * @param strategy - Optional strategy instance (if not provided, uses configured strategy from config.ts)
+   */
+  constructor(config?: RecommendationConfig, strategy?: RecommendationStrategy) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    
+    // Use provided strategy, or create from configuration
+    this.strategy = strategy ?? createRecommendationStrategy(
+      undefined, // Use activeStrategy from RECOMMENDATION_CONFIG
+      this.config.tfidfWeight,
+      this.config.bertWeight
+    );
+    
+    console.log(`RecommendationEngine initialized with strategy: ${this.strategy.name}`);
   }
 
   /**
@@ -76,34 +95,24 @@ export class RecommendationEngine {
   /**
    * Compute recommendations for a single user
    * 
+   * Delegates to the configured recommendation strategy.
+   * Strategy determines the algorithm (brute-force, HNSW, etc.)
+   * 
    * @param user - User data including vectors
    * @param candidates - Array of internship candidates to score
    * @returns Recommendation result with top-N candidates
    */
-  computeUserRecommendations(
+  async computeUserRecommendations(
     user: UserRecommendationInput,
     candidates: InternshipCandidate[]
-  ): RecommendationResult {
-    // Score all candidates
-    const scored: RecommendationCandidate[] = candidates.map((candidate) => ({
-      id: candidate.id,
-      score: computeHybridScore(
-        user.vectors,
-        candidate.vectors,
-        this.config.tfidfWeight,
-        this.config.bertWeight
-      ),
-    }));
-
-    // Filter by threshold, sort descending, take top N
-    const recommendations = scored
-      .filter((s) => s.score >= this.config.threshold)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, this.config.topN)
-      .map((s) => ({
-        id: s.id,
-        score: Math.round(s.score * 1000) / 1000, // Round to 3 decimal places
-      }));
+  ): Promise<RecommendationResult> {
+    // Delegate to strategy
+    const recommendations = await this.strategy.computeRecommendations(
+      user,
+      candidates,
+      this.config.topN,
+      this.config.threshold
+    );
 
     return {
       userId: user.userId,
@@ -111,9 +120,10 @@ export class RecommendationEngine {
       updatedAt: new Date(),
       metadata: {
         totalCandidates: candidates.length,
-        processedCandidates: scored.length,
+        processedCandidates: candidates.length,
         threshold: this.config.threshold,
         topN: this.config.topN,
+        strategy: this.strategy.name,
       },
     };
   }

@@ -139,7 +139,7 @@ for await (const user of userCursor) {
     },
   };
 
-  const result = engine.computeUserRecommendations(userInput, candidates);
+  const result = await engine.computeUserRecommendations(userInput, candidates);
 
   // Save to database
   await engine.saveRecommendations(result);
