@@ -24,10 +24,10 @@ export const RECOMMENDATION_CONFIG = {
    * Active strategy - Change this to switch algorithms globally
    * 
    * Options:
-   * - StrategyType.BRUTE_FORCE (current, production-ready)
-   * - StrategyType.HNSW (not yet implemented, Phase 3)
+   * - StrategyType.BRUTE_FORCE (Phase 1-3, O(U × I))
+   * - StrategyType.HNSW (Phase 4, O(log I + K))
    */
-  activeStrategy: StrategyType.BRUTE_FORCE,
+  activeStrategy: StrategyType.HNSW,
 
   /**
    * Default configuration values
@@ -47,10 +47,18 @@ export const RECOMMENDATION_CONFIG = {
       // No special config needed
     },
     hnsw: {
-      // Future: HNSW-specific parameters
-      // efConstruction: 200,
-      // M: 16,
-      // efSearch: 50,
+      /**
+       * Number of candidates to retrieve from HNSW index (K parameter)
+       * Higher = better recall, slower
+       * Typical values: 50-500
+       * Recommendation: 5-10x topN
+       */
+      candidateK: 100,
+
+      /**
+       * HNSW parameters (from lib/hnsw/config.ts)
+       * M: 16, efConstruction: 200, efSearch: 50
+       */
     },
   },
 } as const;
@@ -77,7 +85,11 @@ export function createRecommendationStrategy(
       return new BruteForceStrategy(tfidf, bert);
 
     case StrategyType.HNSW:
-      return new HNSWStrategy(tfidf, bert);
+      return new HNSWStrategy(
+        tfidf,
+        bert,
+        RECOMMENDATION_CONFIG.strategies.hnsw.candidateK
+      );
 
     default:
       // Fallback to brute-force for safety
