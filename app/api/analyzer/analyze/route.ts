@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Get the resume from user's resume field
     if (!user.resume?.parsedData) {
       return NextResponse.json(
-        { error: 'No resume found. Please upload a resume first.' },
+        { error: 'No resume data found. Please upload your resume in the Dashboard → Resume tab, wait for it to be parsed, then try analyzing again.' },
         { status: 400 }
       );
     }
@@ -113,39 +113,184 @@ export async function POST(request: NextRequest) {
 function formatResumeForAnalysis(parsedData: any): string {
   const sections: string[] = [];
 
-  if (parsedData.Summary) {
-    sections.push(`Summary:\n${parsedData.Summary}`);
+  // Handle Summary (both formats: Summary and summary)
+  const summary = parsedData.Summary || parsedData.summary;
+  if (summary) {
+    sections.push(`Summary:\n${summary}`);
   }
 
-  if (parsedData.Experience && Array.isArray(parsedData.Experience)) {
-    sections.push(
-      `Experience:\n${parsedData.Experience.map(
-        (exp: any) =>
-          `${exp.CompanyName} - ${exp.Role} (${exp.StartDate} to ${exp.EndDate})\n${(exp.Responsibilities || []).join('\n')}`
-      ).join('\n\n')}`
-    );
+  // Handle Experience/workHistory
+  const experience = parsedData.Experience || parsedData.workHistory;
+  if (experience && Array.isArray(experience)) {
+    const expText = experience.map((exp: any) => {
+      // Handle both old format (CompanyName, Role) and new format (company, title)
+      const company = exp.CompanyName || exp.company || 'Unknown Company';
+      const role = exp.Role || exp.title || 'Unknown Role';
+      const location = exp.Location || exp.location || '';
+      const startDate = exp.StartDate || exp.period?.start || '';
+      const endDate = exp.EndDate || exp.period?.end || (exp.period?.isCurrent ? 'Present' : '');
+      const responsibilities = exp.Responsibilities || exp.responsibilities || [];
+      const achievements = exp.achievements || [];
+      
+      let text = `${company} - ${role}`;
+      if (location) text += ` (${location})`;
+      text += ` (${startDate} to ${endDate})\n`;
+      
+      if (responsibilities.length > 0) {
+        text += responsibilities.join('\n');
+      }
+      if (achievements.length > 0) {
+        text += '\n' + achievements.join('\n');
+      }
+      
+      return text;
+    }).join('\n\n');
+    
+    sections.push(`Experience:\n${expText}`);
   }
 
-  if (parsedData.Education && Array.isArray(parsedData.Education)) {
-    sections.push(
-      `Education:\n${parsedData.Education.map(
-        (edu: any) =>
-          `${edu.Institution} - ${edu.Degree} in ${edu.FieldOfStudy}`
-      ).join('\n')}`
-    );
+  // Handle Education
+  const education = parsedData.Education || parsedData.education;
+  if (education && Array.isArray(education)) {
+    const eduText = education.map((edu: any) => {
+      // Handle both formats
+      const institution = edu.Institution || edu.institution || 'Unknown Institution';
+      const degree = edu.Degree || edu.field?.type || '';
+      const fieldOfStudy = edu.FieldOfStudy || edu.field?.course || '';
+      const output = edu.output || '';
+      
+      let text = `${institution}`;
+      if (degree) text += ` - ${degree}`;
+      if (fieldOfStudy) text += ` in ${fieldOfStudy}`;
+      if (output) text += `\n${output}`;
+      
+      return text;
+    }).join('\n');
+    
+    sections.push(`Education:\n${eduText}`);
   }
 
-  if (parsedData.Skills && Array.isArray(parsedData.Skills)) {
-    sections.push(`Skills:\n${parsedData.Skills.join(', ')}`);
+  // Handle Skills
+  const skills = parsedData.Skills || parsedData.skills;
+  if (skills && Array.isArray(skills)) {
+    // Handle two formats: string array OR object array
+    if (typeof skills[0] === 'string') {
+      sections.push(`Skills:\n${skills.join(', ')}`);
+    } else {
+      // New format: array of skill objects with field and tools
+      const skillsText = skills.map((skill: any) => {
+        if (skill.field) {
+          const tools = skill.tools?.map((t: any) => t.name).join(', ') || '';
+          return `${skill.field}: ${tools}`;
+        }
+        return '';
+      }).filter(Boolean).join('\n');
+      
+      if (skillsText) {
+        sections.push(`Skills:\n${skillsText}`);
+      }
+    }
   }
 
-  if (parsedData.Projects && Array.isArray(parsedData.Projects)) {
-    sections.push(
-      `Projects:\n${parsedData.Projects.map(
-        (proj: any) =>
-          `${proj.ProjectName}\n${(proj.Responsibilities || []).join('\n')}`
-      ).join('\n\n')}`
-    );
+  // Handle Projects
+  const projects = parsedData.Projects || parsedData.projects;
+  if (projects && Array.isArray(projects)) {
+    const projText = projects.map((proj: any) => {
+      const name = proj.ProjectName || proj.title || 'Unnamed Project';
+      const role = proj.role || '';
+      const techStack = proj.techStack || [];
+      const description = proj.Responsibilities || proj.description || [];
+      const problemStatement = proj.problemStatement || '';
+      
+      let text = name;
+      if (role) text += ` (${role})`;
+      text += '\n';
+      
+      if (problemStatement) text += `Problem: ${problemStatement}\n`;
+      if (techStack.length > 0) text += `Tech Stack: ${techStack.join(', ')}\n`;
+      
+      if (Array.isArray(description)) {
+        text += description.join('\n');
+      } else if (description) {
+        text += description;
+      }
+      
+      return text;
+    }).join('\n\n');
+    
+    sections.push(`Projects:\n${projText}`);
+  }
+
+  // Handle Certifications
+  const certifications = parsedData.certifications;
+  if (certifications && Array.isArray(certifications) && certifications.length > 0) {
+    const certsText = certifications.map((cert: any) => 
+      `${cert.name} - ${cert.issuer} (${cert.date || 'N/A'})`
+    ).join('\n');
+    sections.push(`Certifications:\n${certsText}`);
+  }
+
+  // Handle Publications
+  const publications = parsedData.publications;
+  if (publications && Array.isArray(publications) && publications.length > 0) {
+    const pubsText = publications.map((pub: any) =>
+      `${pub.title} (${pub.type}) - ${pub.platform} (${pub.date || 'N/A'})`
+    ).join('\n');
+    sections.push(`Publications:\n${pubsText}`);
+  }
+
+  // Handle Activities/Affiliations
+  const activities = parsedData.Activities || parsedData.affiliations;
+  if (activities && Array.isArray(activities) && activities.length > 0) {
+    if (typeof activities[0] === 'string') {
+      sections.push(`Activities:\n${activities.join('\n')}`);
+    } else {
+      const actText = activities.map((act: any) =>
+        `${act.organization || act} - ${act.role || ''}`
+      ).join('\n');
+      sections.push(`Activities:\n${actText}`);
+    }
+  }
+
+  // Handle Interests
+  const interests = parsedData.Interests || parsedData.interests;
+  if (interests && Array.isArray(interests) && interests.length > 0) {
+    if (typeof interests[0] === 'string') {
+      sections.push(`Interests:\n${interests.join(', ')}`);
+    } else {
+      const intText = interests.map((int: any) =>
+        int.activity || int
+      ).join(', ');
+      sections.push(`Interests:\n${intText}`);
+    }
+  }
+
+  // Handle Awards
+  const awards = parsedData.awards;
+  if (awards && Array.isArray(awards) && awards.length > 0) {
+    const awardsText = awards.map((award: any) =>
+      `${award.name} - ${award.issuingBody} (${award.date || 'N/A'})`
+    ).join('\n');
+    sections.push(`Awards:\n${awardsText}`);
+  }
+
+  // Handle Additional Information
+  const additionalInfo = parsedData.AdditionalInformation || parsedData.metaDetails;
+  if (additionalInfo) {
+    if (typeof additionalInfo === 'string') {
+      sections.push(`Additional Information:\n${additionalInfo}`);
+    } else if (additionalInfo.name || additionalInfo.email) {
+      // It's metaDetails object
+      const details = [];
+      if (additionalInfo.name) details.push(`Name: ${additionalInfo.name}`);
+      if (additionalInfo.email) details.push(`Email: ${additionalInfo.email}`);
+      if (additionalInfo.phone_no) details.push(`Phone: ${additionalInfo.phone_no}`);
+      if (additionalInfo.linkedin) details.push(`LinkedIn: ${additionalInfo.linkedin}`);
+      if (additionalInfo.github_profile) details.push(`GitHub: ${additionalInfo.github_profile}`);
+      if (details.length > 0) {
+        sections.push(`Contact Information:\n${details.join('\n')}`);
+      }
+    }
   }
 
   return sections.join('\n\n');
