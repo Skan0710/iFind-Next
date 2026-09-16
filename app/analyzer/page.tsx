@@ -33,10 +33,26 @@ export default function AnalyzerPage() {
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [hasResume, setHasResume] = useState(false);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     fetchData();
+    checkResume();
   }, []);
+
+  const checkResume = async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setHasResume(!!data.user?.resume?.parsedData);
+        setUserName(data.user?.name || '');
+      }
+    } catch (error) {
+      console.error('Error checking resume:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -112,42 +128,64 @@ export default function AnalyzerPage() {
       </div>
 
       {/* Action Card */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5" />
-            Ready to Analyze Your Resume?
-          </CardTitle>
-          <CardDescription>
-            Upload a resume to get detailed analysis, skill recommendations, and matching internship opportunities
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          <Button
-            onClick={runAnalysis}
-            disabled={analyzing}
-            size="lg"
-          >
-            {analyzing ? (
-              <>
-                <Loader className="w-4 h-4 mr-2 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4 mr-2" />
-                Analyze My Resume
-              </>
-            )}
-          </Button>
-          <Link href="/dashboard">
-            <Button variant="outline" size="lg">
-              Go to Dashboard
-              <ArrowRight className="w-4 h-4 ml-2" />
+      {!hasResume ? (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-900">
+              <AlertCircle className="w-5 h-5" />
+              Resume Required
+            </CardTitle>
+            <CardDescription className="text-orange-800">
+              Please upload your resume first to use the Resume Analyzer
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/dashboard">
+              <Button variant="outline" size="lg" className="border-orange-600 text-orange-600 hover:bg-orange-100">
+                Go to Dashboard to Upload Resume
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              Ready to Analyze Your Resume?
+            </CardTitle>
+            <CardDescription>
+              {userName && `Hi ${userName}! `}Your resume is ready. Get detailed analysis, skill recommendations, and matching internship opportunities based on your uploaded resume data.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex gap-4">
+            <Button
+              onClick={runAnalysis}
+              disabled={analyzing}
+              size="lg"
+            >
+              {analyzing ? (
+                <>
+                  <Loader className="w-4 h-4 mr-2 animate-spin" />
+                  Analyzing Your Resume...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Analyze My Resume
+                </>
+              )}
             </Button>
-          </Link>
-        </CardContent>
-      </Card>
+            <Link href="/dashboard">
+              <Button variant="outline" size="lg">
+                Go to Dashboard
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Metrics Overview */}
       {metrics && metrics.totalAnalyses > 0 && (

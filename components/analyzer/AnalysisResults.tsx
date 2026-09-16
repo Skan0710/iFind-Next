@@ -23,6 +23,8 @@ import {
   Lightbulb,
   Zap,
 } from 'lucide-react';
+import { ResumeDataDisplay } from './ResumeDataDisplay';
+import { LearningRoadmap } from './LearningRoadmap';
 
 interface AnalysisResultsProps {
   analysis: AnalysisResult;
@@ -43,10 +45,12 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
 
   return (
     <Tabs defaultValue="scores" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="scores">Scores</TabsTrigger>
+        <TabsTrigger value="resume">Resume Data</TabsTrigger>
         <TabsTrigger value="skills">Skills</TabsTrigger>
         <TabsTrigger value="recommendations">Tips</TabsTrigger>
+        <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
         <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
       </TabsList>
 
@@ -100,6 +104,19 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
             ))}
           </div>
         </div>
+      </TabsContent>
+
+      {/* Resume Data Tab */}
+      <TabsContent value="resume" className="space-y-4">
+        {analysis.parsedResume ? (
+          <ResumeDataDisplay resumeData={analysis.parsedResume} />
+        ) : (
+          <Card>
+            <CardContent className="pt-6 text-center text-gray-600">
+              <p>No resume data available</p>
+            </CardContent>
+          </Card>
+        )}
       </TabsContent>
 
       {/* Skills Tab */}
@@ -208,6 +225,14 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
             </div>
           </CardContent>
         </Card>
+      </TabsContent>
+
+      {/* Learning Roadmap Tab */}
+      <TabsContent value="roadmap" className="space-y-4">
+        <LearningRoadmap
+          missingSkills={analysis.missingSkills}
+          currentSkills={analysis.extractedSkills.map((s) => s.name)}
+        />
       </TabsContent>
 
       {/* Opportunities Tab */}
