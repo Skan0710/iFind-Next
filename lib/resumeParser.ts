@@ -134,7 +134,7 @@ async function parseWithGemini(pdfBuffer: Buffer): Promise<any> {
   const base64Pdf = pdfBuffer.toString("base64");
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -175,10 +175,24 @@ async function parseWithGemini(pdfBuffer: Buffer): Promise<any> {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function parseResumeWithAI(pdfBuffer: Buffer): Promise<any> {
-  // 1. Try OpenAI
+  let geminiError: unknown;
   let openAiError: unknown;
+
+  // 1. Try Gemini FIRST (since OpenAI has no credits)
   try {
-    console.log("[resumeParser] Trying OpenAI...");
+    console.log("[resumeParser] Trying Gemini (primary)...");
+    const result = await parseWithGemini(pdfBuffer);
+    console.log("[resumeParser] Gemini succeeded.");
+    return result;
+  } catch (err) {
+    geminiError = err;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[resumeParser] Gemini failed — message: ${msg}`);
+  }
+
+  // 2. Try OpenAI as fallback
+  try {
+    console.log("[resumeParser] Trying OpenAI (fallback)...");
     const result = await parseWithOpenAI(pdfBuffer);
     console.log("[resumeParser] OpenAI succeeded.");
     return result;
@@ -189,38 +203,35 @@ export async function parseResumeWithAI(pdfBuffer: Buffer): Promise<any> {
     console.warn(`[resumeParser] OpenAI failed — status: ${status}, message: ${msg}`);
   }
 
-  // 2. Try Gemini
-  let geminiError: unknown;
-  try {
-    console.log("[resumeParser] Trying Gemini...");
-    const result = await parseWithGemini(pdfBuffer);
-    console.log("[resumeParser] Gemini succeeded.");
-    return result;
-  } catch (err) {
-    geminiError = err;
-    const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`[resumeParser] Gemini failed — message: ${msg}`);
-  }
-
-  // 3. Retry OpenAI once more (only if first failure was quota-related)
-  if (isQuotaError(openAiError) || isQuotaError(geminiError)) {
+  // 3. Retry Gemini once more if OpenAI had quota issues
+  if (isQuotaError(openAiError)) {
     try {
-      console.log("[resumeParser] Retrying OpenAI after Gemini quota hit...");
-      const result = await parseWithOpenAI(pdfBuffer);
-      console.log("[resumeParser] OpenAI retry succeeded.");
+      console.log("[resumeParser] Retrying Gemini after OpenAI quota hit...");
+      const result = await parseWithGemini(pdfBuffer);
+      console.log("[resumeParser] Gemini retry succeeded.");
       return result;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      const status = err instanceof OpenAI.APIError ? err.status : "N/A";
-      console.error(`[resumeParser] OpenAI retry also failed — status: ${status}, message: ${msg}`);
+      console.error(`[resumeParser] Gemini retry also failed — message: ${msg}`);
     }
   }
 
   // 4. All failed — log full errors for debugging then throw user-friendly message
   console.error("[resumeParser] ── ALL PROVIDERS FAILED ──────────────────────");
-  console.error("[resumeParser] OpenAI error:", openAiError);
   console.error("[resumeParser] Gemini error:", geminiError);
+  console.error("[resumeParser] OpenAI error:", openAiError);
   console.error("[resumeParser] ─────────────────────────────────────────────");
 
-  throw new Error("Resume parsing is having some problems, please try again later.");
+  // Provide specific error message
+  if (geminiError) {
+    const geminiMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
+    if (geminiMsg.includes("API key not valid")) {
+      throw new Error("Gemini API key is invalid. Please check your GEMINI_API_KEY in .env.local. Get a free key from https://aistudio.google.com/app/apikey");
+    }
+  }
+  if (openAiError && isQuotaError(openAiError)) {
+    throw new Error("OpenAI has no credits and Gemini API is not configured properly. Please add a valid GEMINI_API_KEY to .env.local");
+  }
+
+  throw new Error("Resume parsing failed. Please check your API keys (GEMINI_API_KEY or OPENAI_API_KEY) in .env.local");
 }
