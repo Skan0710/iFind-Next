@@ -11,6 +11,7 @@ import {
     LogOut,
     ChevronRight,
     ShieldCheck,
+    Sparkles,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -28,6 +29,10 @@ const NAV_ITEMS = [
     { tab: "resume", label: "Resume", icon: FileText },
     { tab: "profile", label: "Profile", icon: User },
     { tab: "saved", label: "Saved", icon: Bookmark },
+];
+
+const ANALYZER_ITEMS = [
+    { href: "/analyzer", label: "Resume Analyzer", icon: Sparkles },
 ];
 
 const ADMIN_NAV_ITEMS = [
@@ -95,6 +100,20 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
                         {activeTab === tab && (
                             <ChevronRight className="h-3 w-3 text-blue-400" />
                         )}
+                    </Link>
+                ))}
+
+                {/* Analyzer Section */}
+                <div className="my-2 border-t border-gray-100" />
+                {ANALYZER_ITEMS.map(({ href, label, icon: Icon }) => (
+                    <Link
+                        key={href}
+                        href={href}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group text-gray-600 hover:bg-purple-50 hover:text-purple-700"
+                    >
+                        <Icon className="h-4 w-4 text-gray-400 group-hover:text-purple-600" />
+                        <span className="flex-1">{label}</span>
+                        <ChevronRight className="h-3 w-3 text-gray-300 group-hover:text-purple-400" />
                     </Link>
                 ))}
 

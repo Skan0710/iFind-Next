@@ -6,6 +6,7 @@ import { InternshipCard } from "@/components/internships/InternshipCard";
 import { InternshipDetail } from "@/components/internships/InternshipDetail";
 import { InternshipCardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
+import { AnalyzerMetricsCard } from "@/components/dashboard/AnalyzerMetricsCard";
 import { getStatusColor } from "@/lib/utils";
 import type { User, Internship } from "@/types";
 import { useEffect, useState } from "react";
@@ -145,6 +146,9 @@ export function OverviewTab({ user }: OverviewTabProps) {
         <StatCard icon={<TrendingUp className="h-5 w-5 text-green-600" />} label="Shortlisted"   value={user.appliedInternships.filter((a) => a.status === "shortlisted").length}  bg="bg-green-50" />
         <StatCard icon={<CheckCircle className="h-5 w-5 text-orange-600" />} label="Profile Score" value={`${user.profileCompletionScore}%`}                                      bg="bg-orange-50" />
       </div>
+
+      {/* ── Resume Analyzer Metrics ────────────────────────────────────── */}
+      <AnalyzerMetricsCard />
 
       {/* ── Profile Completion ─────────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
