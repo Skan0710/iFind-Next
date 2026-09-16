@@ -8,10 +8,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Badge } from '@/components/ui/Badge';
 import { Loader, TrendingUp, ArrowRight } from 'lucide-react';
 import { ResumeAnalyzerMetrics } from '@/types/analyzer';
 
@@ -122,7 +122,7 @@ export function AnalyzerMetricsCard() {
                     {score.value}
                   </span>
                 </div>
-                <Progress value={score.value} />
+                <ProgressBar value={score.value} />
               </div>
             ))}
           </div>

@@ -7,15 +7,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/ui/Card';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Badge } from '@/components/ui/Badge';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/components/ui/tabs';
+} from '@/components/ui/Tabs';
 import {
   AlertCircle,
   CheckCircle,
@@ -68,7 +68,7 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
                     Resume quality assessment
                   </p>
                 </div>
-                <Progress
+                <ProgressBar
                   value={analysis.scores.overall}
                   className="w-32 h-2"
                 />
@@ -93,7 +93,7 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
                         {score.value}
                       </p>
                     </div>
-                    <Progress value={score.value} />
+                    <ProgressBar value={score.value} />
                   </div>
                 </CardContent>
               </Card>
@@ -240,7 +240,7 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
                           <p className="font-semibold text-sm">
                             Match Score: {match.matchScore}%
                           </p>
-                          <Progress
+                          <ProgressBar
                             value={match.matchScore}
                             className="w-24 h-1.5"
                           />

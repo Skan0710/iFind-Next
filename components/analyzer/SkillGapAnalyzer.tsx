@@ -7,11 +7,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+} from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -162,7 +162,7 @@ export function SkillGapAnalyzer({ analysisId }: SkillGapAnalyzerProps) {
                       {result.skillMatchScore}%
                     </p>
                   </div>
-                  <Progress value={result.skillMatchScore} />
+                  <ProgressBar value={result.skillMatchScore} />
                   <p className="text-xs text-gray-600 mt-2">
                     You have {result.totalMatched} of {result.totalRequired} required skills
                   </p>

@@ -9,10 +9,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Badge } from '@/components/ui/Badge';
 import {
   AlertCircle,
   TrendingUp,
@@ -248,7 +248,7 @@ export default function AnalyzerPage() {
                         <span className="font-medium">{skill.skill}</span>
                         <span className="text-gray-600">{skill.count}x</span>
                       </div>
-                      <Progress value={(skill.count / metrics.totalAnalyses) * 100} />
+                      <ProgressBar value={(skill.count / metrics.totalAnalyses) * 100} />
                     </div>
                   ))}
                 </div>
