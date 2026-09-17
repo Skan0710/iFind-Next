@@ -135,31 +135,25 @@ interface ResumeDataDisplayProps {
   resumeData: ResumeData;
 }
 
-export function ResumeDataDisplay({ resumeData }: ResumeDataDisplayProps) {
-  // Helper to get summary (handle both formats)
+export default function ResumeDataDisplay({ resumeData }: { resumeData: ResumeData | null }) {
+  if (!resumeData) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No resume data available. Upload and parse a resume first.</p>
+      </div>
+    );
+  }
+
+  // Extract data from both old and new formats
   const summary = resumeData.Summary || resumeData.summary;
-  
-  // Helper to get education (handle both formats)
-  const education = resumeData.Education || resumeData.education;
-  
-  // Helper to get skills (handle both formats)
-  const skills = resumeData.Skills || resumeData.skills;
-  
-  // Helper to get experience (handle both formats)
-  const experience = resumeData.Experience || resumeData.workHistory;
-  
-  // Helper to get projects (handle both formats)
-  const projects = resumeData.Projects || resumeData.projects;
-  
-  // Helper to get activities (handle both formats)
-  const activities = resumeData.Activities || resumeData.affiliations;
-  
-  // Helper to get interests (handle both formats)
-  const interests = resumeData.Interests || resumeData.interests;
-  
-  // Helper to get additional info (handle both formats)
+  const education = resumeData.Education || resumeData.education || [];
+  const skills = resumeData.Skills || resumeData.skills || [];
+  const projects = resumeData.Projects || resumeData.projects || [];
+  const experience = resumeData.Experience || resumeData.workHistory || [];
+  const activities = resumeData.Activities || resumeData.affiliations || [];
+  const interests = resumeData.Interests || resumeData.interests || [];
   const additionalInfo = resumeData.AdditionalInformation || resumeData.metaDetails;
-  
+
   return (
     <div className="space-y-6">
       {/* Summary */}
@@ -375,9 +369,11 @@ export function ResumeDataDisplay({ resumeData }: ResumeDataDisplayProps) {
                       </div>
                     )}
                   </div>
+                  
                   {problemStatement && (
                     <p className="text-sm text-gray-700 mb-2 italic">{problemStatement}</p>
                   )}
+                  
                   {techStack.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-2">
                       {techStack.map((tech: string, i: number) => (
@@ -387,6 +383,7 @@ export function ResumeDataDisplay({ resumeData }: ResumeDataDisplayProps) {
                       ))}
                     </div>
                   )}
+                  
                   {Array.isArray(responsibilities) && responsibilities.length > 0 && (
                     <ul className="list-disc list-inside space-y-1 mt-2">
                       {responsibilities.map((resp: string, i: number) => (

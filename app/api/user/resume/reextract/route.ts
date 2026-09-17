@@ -3,9 +3,9 @@ import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import { getResumeBuffer } from "@/lib/gridfs";
-import { parseResumeRuleBased } from "@/lib/resumeParserRuleBased";
+import { parseResumeWithAI } from "@/lib/resumeParser";
 
-// POST /api/user/resume/reextract — re-parse existing resume (NO AI NEEDED!)
+// POST /api/user/resume/reextract — re-parse existing resume with AI
 export async function POST() {
   try {
     const session = await getSession();
@@ -39,8 +39,8 @@ export async function POST() {
       throw fileError;
     }
 
-    // Parse with rule-based parser (NO AI, 100% FREE!)
-    const parsedData = await parseResumeRuleBased(buffer);
+    // Parse with AI (Gemini)
+    const parsedData = await parseResumeWithAI(buffer);
 
     // Update user document with new parsed data
     user.resume.parsedData = parsedData;

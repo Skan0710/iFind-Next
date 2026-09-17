@@ -67,6 +67,7 @@ export function HeroSection() {
                                 onKeyDown={(e) =>
                                     e.key === "Enter" && handleSearch()
                                 }
+                                suppressHydrationWarning
                                 className="flex-1 text-gray-900 placeholder:text-gray-400 text-sm outline-none py-2"
                             />
                         </div>
@@ -81,6 +82,7 @@ export function HeroSection() {
                                 onKeyDown={(e) =>
                                     e.key === "Enter" && handleSearch()
                                 }
+                                suppressHydrationWarning
                                 className="flex-1 text-gray-900 placeholder:text-gray-400 text-sm outline-none py-2"
                             />
                         </div>
@@ -103,6 +105,7 @@ export function HeroSection() {
                                     setRole(term);
                                     handleSearch();
                                 }}
+                                suppressHydrationWarning
                                 className="text-sm bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-3 py-1 transition-colors"
                             >
                                 {term}

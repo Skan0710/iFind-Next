@@ -23,7 +23,7 @@ import {
   Lightbulb,
   Zap,
 } from 'lucide-react';
-import { ResumeDataDisplay } from './ResumeDataDisplay';
+import ResumeDataDisplay from './ResumeDataDisplay';
 import { LearningRoadmap } from './LearningRoadmap';
 
 interface AnalysisResultsProps {

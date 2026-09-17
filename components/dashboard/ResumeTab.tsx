@@ -470,7 +470,7 @@ function ResumeDataDisplay({ data }: { data: ParsedResumeData }) {
             <Field label="Email" value={data.metaDetails.email} />
             {data.metaDetails.phone_no && <Field label="Phone" value={data.metaDetails.phone_no} />}
             {data.metaDetails.address && (
-              <Field label="Location" value={`${data.metaDetails.address.city}, ${data.metaDetails.address.country}`} />
+              <Field label="Location" value={`${data.metaDetails.address.city ?? "Unknown"}, ${data.metaDetails.address.country ?? "Unknown"}`} />
             )}
             {data.metaDetails.github_profile && (
               <div className="flex items-center gap-1">
@@ -508,7 +508,7 @@ function ResumeDataDisplay({ data }: { data: ParsedResumeData }) {
                   </div>
                   <Badge variant="secondary" className="text-xs shrink-0">{w.type}</Badge>
                 </div>
-                <p className="text-xs text-gray-500">{w.period.start} – {w.period.isCurrent ? "Present" : w.period.end ?? "N/A"}</p>
+                <p className="text-xs text-gray-500">{w.period?.start ?? "N/A"} – {w.period?.isCurrent ? "Present" : w.period?.end ?? "N/A"}</p>
                 {w.responsibilities?.length > 0 && <BulletList label="Responsibilities" items={w.responsibilities} />}
                 {w.achievements?.length > 0 && <BulletList label="Achievements" items={w.achievements} />}
               </div>
@@ -524,8 +524,8 @@ function ResumeDataDisplay({ data }: { data: ParsedResumeData }) {
             {data.education.map((e, i) => (
               <div key={i} className="border-l-2 border-green-200 pl-3 space-y-0.5">
                 <p className="font-medium text-sm text-gray-900">{e.institution}</p>
-                <p className="text-xs text-gray-600">{e.field.type} in {e.field.course}</p>
-                <p className="text-xs text-gray-500">{e.period.start} – {e.period.isCurrent ? "Present" : e.period.end ?? "N/A"}</p>
+                <p className="text-xs text-gray-600">{e.field?.type ?? "Degree"} in {e.field?.course ?? "N/A"}</p>
+                <p className="text-xs text-gray-500">{e.period?.start ?? "N/A"} – {e.period?.isCurrent ? "Present" : e.period?.end ?? "N/A"}</p>
                 {e.output && <p className="text-xs text-gray-600">{e.output}</p>}
               </div>
             ))}
@@ -570,9 +570,9 @@ function ResumeDataDisplay({ data }: { data: ParsedResumeData }) {
                 </div>
                 {p.description?.length > 0 && <BulletList items={p.description} />}
                 <div className="flex gap-3 text-xs">
-                  {p.links.repo && <a href={p.links.repo} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Repo</a>}
-                  {p.links.live && <a href={p.links.live} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Live</a>}
-                  {p.links.demo && <a href={p.links.demo} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Demo</a>}
+                  {p.links?.repo && <a href={p.links.repo} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Repo</a>}
+                  {p.links?.live && <a href={p.links.live} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Live</a>}
+                  {p.links?.demo && <a href={p.links.demo} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Demo</a>}
                 </div>
               </div>
             ))}
@@ -654,7 +654,7 @@ function ResumeDataDisplay({ data }: { data: ParsedResumeData }) {
                     <p className="text-sm font-medium text-gray-900">{a.organization}</p>
                     <p className="text-xs text-gray-600">{a.role} · {a.type}</p>
                   </div>
-                  <span className="text-xs text-gray-500 shrink-0">{a.period.start} – {a.period.isCurrent ? "Present" : a.period.end ?? "N/A"}</span>
+                  <span className="text-xs text-gray-500 shrink-0">{a.period?.start ?? "N/A"} – {a.period?.isCurrent ? "Present" : a.period?.end ?? "N/A"}</span>
                 </div>
                 {a.impact?.length > 0 && <BulletList items={a.impact} />}
               </div>
