@@ -26,7 +26,6 @@ interface SidebarProps {
 const NAV_ITEMS = [
     { tab: "overview", label: "Overview", icon: LayoutDashboard },
     { tab: "internships", label: "Internships", icon: Briefcase },
-    { tab: "resume", label: "Resume", icon: FileText },
     { tab: "profile", label: "Profile", icon: User },
     { tab: "saved", label: "Saved", icon: Bookmark },
 ];

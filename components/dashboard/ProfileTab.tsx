@@ -237,12 +237,91 @@ export function ProfileTab({ user, onUpdate }: ProfileTabProps) {
             <Input label="Country" {...register("country")} placeholder="India" />
           </div>
           <p className="text-xs text-gray-400">
-            Skills, education, and work history are managed through your resume. Upload a resume in the Resume tab to update them.
+            Skills, education, and work history are managed through your resume. Go to Resume Analyzer to analyze and get recommendations.
           </p>
-          <Button type="submit" loading={saving} className="w-full sm:w-auto">
-            Save Changes
-          </Button>
+          <div className="flex gap-3">
+            <Button type="submit" loading={saving} className="w-full sm:w-auto">
+              Save Changes
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => window.location.href = '/analyzer'}
+              className="w-full sm:w-auto"
+            >
+              Resume Analyzer →
+            </Button>
+          </div>
         </form>
+      </div>
+
+      {/* Resume Management */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="font-semibold text-gray-900">Resume</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Upload your resume for better job matching and AI-powered analysis
+            </p>
+          </div>
+          {user.resume?.driveViewLink && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.href = '/analyzer'}
+            >
+              Analyze Resume →
+            </Button>
+          )}
+        </div>
+
+        {user.resume?.driveViewLink ? (
+          <div className="space-y-4">
+            <div className="flex items-start gap-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm text-green-900">Resume Uploaded</p>
+                <p className="text-xs text-green-700 mt-0.5">
+                  {user.resume.uploadedAt && `Uploaded on ${new Date(user.resume.uploadedAt).toLocaleDateString()}`}
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <a href={user.resume.driveViewLink} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm">View PDF</Button>
+                  </a>
+                  {user.resume.driveFileId && (
+                    <a href={`/api/user/resume/download/${user.resume.driveFileId}`} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm">Download</Button>
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">
+              To update your resume, delete the current one and upload a new file.
+            </p>
+          </div>
+        ) : (
+          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+            <svg className="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-sm font-medium text-gray-700 mb-1">No resume uploaded</p>
+            <p className="text-xs text-gray-500 mb-4">
+              Upload your resume to unlock AI-powered job matching and analysis
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.href = '/analyzer'}
+            >
+              Go to Resume Analyzer
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Change Password */}

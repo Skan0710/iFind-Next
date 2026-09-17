@@ -6,7 +6,6 @@ import { Menu, X, Briefcase } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { OverviewTab } from "@/components/dashboard/OverviewTab";
 import { InternshipsTab } from "@/components/dashboard/InternshipsTab";
-import { ResumeTab } from "@/components/dashboard/ResumeTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
 import { ModerationTab } from "@/components/dashboard/ModerationTab";
 import { InternshipCard } from "@/components/internships/InternshipCard";
@@ -71,7 +70,6 @@ function DashboardContent() {
     const TAB_TITLES: Record<string, string> = {
         overview: "Overview",
         internships: "Browse Internships",
-        resume: "My Resume",
         profile: "My Profile",
         saved: "Saved Internships",
         moderation: "Moderation",
@@ -143,7 +141,6 @@ function DashboardContent() {
                         {activeTab === "internships" && (
                             <InternshipsTab user={user} />
                         )}
-                        {activeTab === "resume" && <ResumeTab user={user} />}
                         {activeTab === "profile" && <ProfileTab user={user} />}
                         {activeTab === "saved" && user && (
                             <SavedTab user={user} />
@@ -161,7 +158,6 @@ function DashboardContent() {
                 {[
                     { tab: "overview", label: "Home", emoji: "🏠" },
                     { tab: "internships", label: "Search", emoji: "🔍" },
-                    { tab: "resume", label: "Resume", emoji: "📄" },
                     { tab: "profile", label: "Profile", emoji: "👤" },
                     { tab: "saved", label: "Saved", emoji: "🔖" },
                 ].map(({ tab, label, emoji }) => (

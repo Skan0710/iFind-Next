@@ -140,9 +140,9 @@ export default function AnalyzerPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/dashboard">
+            <Link href="/dashboard?tab=profile">
               <Button variant="outline" size="lg" className="border-orange-600 text-orange-600 hover:bg-orange-100">
-                Go to Dashboard to Upload Resume
+                Go to Profile to Upload Resume
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
